@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - "latest"
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-duration-seconds: 1200
+          role-session-name: MySessionName
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: "true"
+      - name: Build and push MENDIX_ROOTFS_APP
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.MENDIX_ROOTFS_APP }}
+          file: rootfs-app.dockerfile
+      - name: Build and push MENDIX_ROOTFS_BUILDER
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.MENDIX_ROOTFS_BUILDER }}
+          file: rootfs-builder.dockerfile
